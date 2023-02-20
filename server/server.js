@@ -64,16 +64,16 @@ app.post("/todos", async (req, res) => {
 
     todo.id = id;
 
-    if(user_email){
+    if (user_email) {
         todo.user_email = user_email;
     }
-    if(title){
+    if (title) {
         todo.title = title;
     }
-    if(progress){
+    if (progress) {
         todo.progress = progress;
     }
-    if(date){
+    if (date) {
         todo.date = date;
     }
 
@@ -81,9 +81,82 @@ app.post("/todos", async (req, res) => {
     res.json({ msg: "Todo cadastrado com sucesso", info });
     return;
 
+})
 
+app.put("/todos/:id", async (req, res) => {
+
+    const { id } = req.params;
+    const { user_email, title, progress, date } = req.body
+
+
+    const todo = await Todo.findByPk(id);
+
+    if (!todo) {
+        res.json({ err: `Todo com ${id} não encontrado` })
+        res.status(404);
+        return;
+    }
+
+
+    if (user_email === "" && title === "" && !progress && !date) {
+        res.json({ msg: "Nao foi possivel atualizar, informe algum campo a ser atualizado." });
+        return;
+    }
+
+    if (todo) {
+        let updatesTodo = {
+            user_email: todo.user_email,
+            title: todo.title,
+            progress: todo.progress,
+            date: todo.date,
+        };
+
+        if (user_email) {
+            updatesTodo.user_email = user_email;
+        }
+
+        if (title) {
+            updatesTodo.title = title;
+        }
+
+        if (progress) {
+            updatesTodo.progress = progress;
+        }
+
+        if (date) {
+            updatesTodo.date = date;
+        }
+
+        //Atualizando com as infos que foram informadas apenas
+        todo.update({
+            user_email: updatesTodo.user_email, title: updatesTodo.title,
+            progress: updatesTodo.progress, date: updatesTodo.date
+        }).then(() => { res.json({ msg: "Todo acutalizado con suceso", todo }); return })
+    }
 
 })
+
+
+app.delete("/todos/:id", async (req, res) => {
+
+    let id = req.params.id;
+
+    const todo = await Todo.findByPk(id);
+
+    if (todo) {
+        await todo.destroy();
+        res.status(200).send();
+        return;
+    } else {
+        res.status(404).json({ msg: `Não existe tarefa com o id ${id} para ser removida` })
+        return;
+    }
+
+})
+
+
+
+
 
 
 

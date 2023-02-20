@@ -1,29 +1,46 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import ProgressBar from './ProgressBar';
 import TickIcon from './TickIcon';
-import tickIcon2 from '../imgs/tickicon.svg';
+import tickIcon2 from './icons8-checkmark.svg';
 
 
 const ListItem = ({ task, getData }) => {
 
   const [showModal, setShowModal] = useState(false);
 
+
+  const deleteItem = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/todos/${task.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.status === 200) { 
+        console.log('chegou aq')
+        getData();
+      }
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
     <li className="list-item">
 
       <div className="info-container">
-        <img src={tickIcon2} />
+        <img src={tickIcon2} className="tick" height='50px' width='50px' />
         <p className="task-title">{task.title}</p>
         <ProgressBar />
       </div>
 
       <div className='button-container'>
-        <button className='edit' onClick={()=> setShowModal(true)}>Edit</button>
-        <button className='delete'>Delete</button>
+        <button className='edit' onClick={() => setShowModal(true)}>Edit</button>
+        <button className='delete' onClick={deleteItem}>Delete</button>
       </div>
 
-      {showModal && 
+      {showModal &&
         <Modal mode={'edit'} setShowModal={setShowModal} task={task} getData={getData} />
       }
 
