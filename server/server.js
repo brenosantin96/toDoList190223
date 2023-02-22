@@ -154,6 +154,31 @@ app.delete("/todos/:id", async (req, res) => {
 
 })
 
+//SIGNUP AND LOGIN ?
+
+app.post('/signup', async(req,res) => {
+
+    const {email, password} = req.body;
+
+    try {
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+app.post('/login', async(req,res) => {
+
+    const {email, password} = req.body;
+
+    try {
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+
 
 
 
