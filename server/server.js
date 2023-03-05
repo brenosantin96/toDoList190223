@@ -4,6 +4,8 @@ const { v4: uuidv4 } = require('uuid');
 const sequelize = require("./db");
 const cors = require("cors");
 const bodyparser = require("body-parser");
+const bcrypt = require('bcrypt');
+const JWT = require("jsonwebtoken");
 let router = express.Router();
 const User = require("./Models/User");
 const Todo = require("./Models/Todo");
@@ -148,7 +150,7 @@ app.delete("/todos/:id", async (req, res) => {
         res.status(200).send();
         return;
     } else {
-        res.status(404).json({ msg: `Não existe tarefa com o id ${id} para ser removida` })
+        res.status(400).json({ msg: `Não existe tarefa com o id ${id} para ser removida` })
         return;
     }
 
@@ -156,28 +158,93 @@ app.delete("/todos/:id", async (req, res) => {
 
 //SIGNUP AND LOGIN ?
 
-app.post('/signup', async(req,res) => {
+app.post('/signup', async (req, res) => {
 
-    const {email, password} = req.body;
+    const { email, hashed_password } = req.body;
+    const salt = bcrypt.genSaltSync(10);
+    console.log("SALT", salt);
+    const HASH = bcrypt.hashSync(hashed_password, salt);
+    console.log("HASH", HASH);
 
     try {
-        
+        const user = new User();
+        const userExists = await User.findOne({
+            where: {
+                email: email
+            }
+        });
+
+        if (userExists) {
+            res.status(400);
+            res.json({ error: "Ja existe conta cadastrada com esse email." });
+        }
+
+        if (email === undefined || email === "" || email === null || hashed_password === undefined || hashed_password === "" || hashed_password === null) {
+            res.json({ error: "Nao foi possivel realizar cadastro, informe algum campo." });
+            res.status(404);
+            return;
+
+        }
+
+        if (email && hashed_password) {
+
+            const token = JWT.sign({ email }, 'secret', { expiresIn: '1hr' });
+
+            user.email = email;
+            user.hashed_password = HASH;
+            console.log("hashed password: ", HASH)
+            await user.save();
+            res.json({ msg: "Cadastro feito com sucesso", email, token })
+            res.status(200);
+            return;
+        }
+
+
+    } catch (error) {
+        console.log(error)
+    }
+
+
+})
+
+app.post('/login', async (req, res) => {
+
+    const { email, hashed_password } = req.body;
+
+    try {
+
+        const user = await User.findOne({
+            where: {
+                email: email
+            }
+        });
+
+        if (!user) {
+            res.status(400);
+            res.json({ error: "Nao existe usuario com este email." });
+        } else {
+
+            const success = await bcrypt.compare(hashed_password, user.hashed_password);
+            const token = JWT.sign({ email }, 'secret', { expiresIn: '1hr' });
+
+            if(success){
+                res.json({'email': user.email, token})
+            } else {
+                res.json({error: 'Login failed'})
+            }
+
+        }
+
     } catch (error) {
         console.log(error)
     }
 })
 
-app.post('/login', async(req,res) => {
 
-    const {email, password} = req.body;
-
-    try {
-        
-    } catch (error) {
-        console.log(error)
-    }
-})
-
+//Sync DB
+sequelize.sync(({ alter: true })).then(() => {
+    console.log("sincronizado com sucesso")
+}).catch((err) => { console.log("Deu algum erro ao sincronizar o ORM com o BANCO DE DADOS:", err) });
 
 
 

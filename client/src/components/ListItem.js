@@ -32,7 +32,7 @@ const ListItem = ({ task, getData }) => {
       <div className="info-container">
         <img src={tickIcon2} className="tick" height='50px' width='50px' />
         <p className="task-title">{task.title}</p>
-        <ProgressBar />
+        <ProgressBar progress={task.progress} />
       </div>
 
       <div className='button-container'>

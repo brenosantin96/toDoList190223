@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { useCookies } from "react-cookie";
 
 const Auth = () => {
 
+  const [cookies, setCookie, removeCookie] = useCookies(null);
   const [isLogIn, setIsLogIn] = useState(true);
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState(null);
   const [error, setError] = useState(null);
 
-  console.log(email, password, confirmPassword);
+
+  console.log(cookies);
 
   const viewLogin = (status) => {
 
@@ -26,11 +29,25 @@ const Auth = () => {
     const response = await fetch(`${process.env.REACT_APP_SERVERURL}/${endpoint}`, {
       method: 'POST',
       headers: {'Content-Type' : 'application/json'},
-      body: JSON.stringify({email, password})
+      body: JSON.stringify({email, hashed_password: password})
     });
 
+    console.log("RESPONSE ",response);
+
+    console.log("PASSWORD ENVIADO", password);
+    
     const data = await response.json();
-    console.log(data);
+    console.log(response);
+
+    if(data.detail){
+      setError(data.detail);
+    } else{
+      setCookie('Email', data.email)
+      setCookie('AuthToken', data.token)
+
+      window.location.reload();
+    }
+
 
   }
 
